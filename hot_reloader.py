@@ -141,12 +141,13 @@ class ReloaderLoop(object):
 
             exit_code = subprocess.call(args, env=new_environ,
                                         close_fds=False)
+            _log.info("subprocess exit with code {}".format(exit_code))
             if exit_code != 3:
                 return exit_code
 
     def trigger_reload(self, filename):
         self.log_reload(filename)
-        sys.exit(3)
+        os._exit(3)
 
     def log_reload(self, filename):
         filename = os.path.abspath(filename)
@@ -278,10 +279,10 @@ def run_with_reloader(main_func, extra_files=None, interval=1,
     signal.signal(signal.SIGTERM, lambda *args: sys.exit(0))
     try:
         if os.environ.get(HOT_RELOADER_RUN_MAIN) == 'true':
-            t = threading.Thread(target=main_func, args=())
+            t = threading.Thread(target=reloader.run, args=())
             t.setDaemon(True)
             t.start()
-            reloader.run()
+            main_func()
         else:
             sys.exit(reloader.restart_with_reloader())
     except KeyboardInterrupt:
